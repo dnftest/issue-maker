@@ -7,6 +7,7 @@ window.QA_CORE.CONSTANTS.THEME_PRESETS = {
     notion: { category: '라이트', name: '노션 캔버스', bg: '#ffffff', panel: '#f7f7f5', textMain: '#37352f', textSub: '#787774', border: '#e9e9e7', accent: '#2383e2' },
     snow: { category: '라이트', name: '스노우 펄', bg: '#f9fafb', panel: '#ffffff', textMain: '#111827', textSub: '#4b5563', border: '#e5e7eb', accent: '#6366f1' },
     softPastel: { category: '라이트', name: '파스텔 소프트', bg: '#fffaf0', panel: '#ffffff', textMain: '#5d4037', textSub: '#8d6e63', border: '#ffe0b2', accent: '#ff8a65' },
+    nordLight: { category: '라이트', name: '노드 라이트', bg: '#e5e9f0', panel: '#eceff4', textMain: '#2e3440', textSub: '#4c566a', border: '#d8dee9', accent: '#5e81ac' },
     
     defaultDark: { category: '다크', name: '기본 다크', bg: '#0f172a', panel: '#1e293b', textMain: '#f8fafc', textSub: '#94a3b8', border: '#334155', accent: '#38bdf8' },
     githubDark: { category: '다크', name: '깃허브 다크', bg: '#0d1117', panel: '#161b22', textMain: '#c9d1d9', textSub: '#8b949e', border: '#30363d', accent: '#58a6ff' },
@@ -14,24 +15,29 @@ window.QA_CORE.CONSTANTS.THEME_PRESETS = {
     discord: { category: '다크', name: '디스코드 다크', bg: '#313338', panel: '#2b2d31', textMain: '#dbdee1', textSub: '#949ba4', border: '#1e1f22', accent: '#5865f2' },
     obsidian: { category: '다크', name: '옵시디언', bg: '#1e1e1e', panel: '#252526', textMain: '#d4d4d4', textSub: '#cccccc', border: '#3c3c3c', accent: '#007acc' },
     oledBlack: { category: '다크', name: '올레드 블랙', bg: '#000000', panel: '#111111', textMain: '#ffffff', textSub: '#aaaaaa', border: '#333333', accent: '#ff3366' },
+    rosePine: { category: '다크', name: '로즈 파인', bg: '#191724', panel: '#1f1d2e', textMain: '#e0def4', textSub: '#908caa', border: '#26233a', accent: '#ebbcba' },
 
     cyberpunk: { category: '스페셜', name: '나이트 시티', bg: '#000b1e', panel: '#00162d', textMain: '#00fff2', textSub: '#ff00ff', border: '#003b5c', accent: '#fdee00' },
     retro80s: { category: '스페셜', name: '레트로 80', bg: '#2b0245', panel: '#3d0363', textMain: '#ff00cc', textSub: '#33ccff', border: '#5a008a', accent: '#ffcc00' },
     monokai: { category: '스페셜', name: '모노카이', bg: '#272822', panel: '#3e3d32', textMain: '#f8f8f2', textSub: '#a6e22e', border: '#75715e', accent: '#fd971f' },
     oneDark: { category: '스페셜', name: '원 다크', bg: '#282c34', panel: '#21252b', textMain: '#abb2bf', textSub: '#5c6370', border: '#3e4451', accent: '#61afef' },
     dracula: { category: '스페셜', name: '드라큘라', bg: '#282a36', panel: '#44475a', textMain: '#f8f8f2', textSub: '#8be9fd', border: '#6272a4', accent: '#bd93f9' },
+    synthwave: { category: '스페셜', name: '신스웨이브', bg: '#2b213a', panel: '#241b2f', textMain: '#f4eedd', textSub: '#b3a1c9', border: '#47365d', accent: '#f92aad' },
 
     nord: { category: '블루/쿨', name: '노드 쿨', bg: '#2e3440', panel: '#3b4252', textMain: '#eceff4', textSub: '#d8dee9', border: '#4c566a', accent: '#88c0d0' },
     oceanic: { category: '블루/쿨', name: '오셔닉 블루', bg: '#1b2b34', panel: '#343d46', textMain: '#d8dee9', textSub: '#a6accd', border: '#4f5b66', accent: '#6699cc' },
     navy: { category: '블루/쿨', name: '딥 네이비', bg: '#0a192f', panel: '#112240', textMain: '#ccd6f6', textSub: '#8892b0', border: '#233554', accent: '#64ffda' },
+    iceberg: { category: '블루/쿨', name: '아이스버그', bg: '#161821', panel: '#1e2132', textMain: '#c6c8d1', textSub: '#8b8e9f', border: '#2a3148', accent: '#84a0c6' },
     
     forest: { category: '네이처', name: '딥 포레스트', bg: '#1c2e26', panel: '#263b32', textMain: '#d1e8df', textSub: '#9ebcae', border: '#3b5448', accent: '#4ade80' },
     mint: { category: '네이처', name: '민트 프레쉬', bg: '#f0fdf4', panel: '#ffffff', textMain: '#14532d', textSub: '#166534', border: '#bbf7d0', accent: '#10b981' },
     gruvbox: { category: '네이처', name: '그루브박스', bg: '#282828', panel: '#3c3836', textMain: '#ebdbb2', textSub: '#a89984', border: '#504945', accent: '#fe8019' },
+    emerald: { category: '네이처', name: '에메랄드', bg: '#022c22', panel: '#064e3b', textMain: '#ecfdf5', textSub: '#a7f3d0', border: '#047857', accent: '#34d399' },
 
     latte: { category: '커피/웜', name: '카페 라떼', bg: '#fdf8f5', panel: '#ffffff', textMain: '#4a3b32', textSub: '#705c4f', border: '#ebd8cc', accent: '#c28e6a' },
     espresso: { category: '커피/웜', name: '에스프레소', bg: '#2c2420', panel: '#3d322d', textMain: '#e6d5c3', textSub: '#b5a494', border: '#4d3f38', accent: '#d4a373' },
-    sepia: { category: '커피/웜', name: '세피아 빈티지', bg: '#f4ecd8', panel: '#fffbf0', textMain: '#433422', textSub: '#705a3e', border: '#dfd3b6', accent: '#d97706' }
+    sepia: { category: '커피/웜', name: '세피아 빈티지', bg: '#f4ecd8', panel: '#fffbf0', textMain: '#433422', textSub: '#705a3e', border: '#dfd3b6', accent: '#d97706' },
+    terracotta: { category: '커피/웜', name: '테라코타', bg: '#fcf6f5', panel: '#f7ebe8', textMain: '#4a2820', textSub: '#85584e', border: '#e8d3cf', accent: '#e0533c' }
 };
 
 window.QA_CORE.Theme = {
@@ -142,26 +148,24 @@ window.QA_CORE.Theme = {
         const presets = window.QA_CORE.CONSTANTS.THEME_PRESETS;
         const categories = [...new Set(Object.values(presets).map(p => p.category))];
 
-        let html = `<div class="theme-category-container">`;
+        let html = '<div class="theme-category-container">';
         categories.forEach(cat => {
             const activeClass = cat === activeCategory ? 'active' : '';
-            html += `<button type="button" class="theme-category-btn ${activeClass}" onclick="window.QA_CORE.Theme.renderTabs('${cat}')">${cat}</button>`;
+            html += '<button type="button" class="theme-category-btn ' + activeClass + '" onclick="window.QA_CORE.Theme.renderTabs(\'' + cat + '\')">' + cat + '</button>';
         });
-        html += `</div>`;
+        html += '</div>';
 
-        html += `<div class="theme-preset-grid">`;
+        html += '<div class="theme-preset-grid">';
         Object.keys(presets).forEach(key => {
             const p = presets[key];
             if (p.category === activeCategory) {
-                html += `
-                    <button type="button" class="theme-preset-btn" 
-                        onclick="window.QA_CORE.Theme.applyPreset('${key}')">
-                        <span class="theme-preset-dot" style="background-color: ${p.accent};"></span>
-                        ${p.name}
-                    </button>`;
+                html += '<button type="button" class="theme-preset-btn" onclick="window.QA_CORE.Theme.applyPreset(\'' + key + '\')">' +
+                        '<span class="theme-preset-dot" style="background-color: ' + p.accent + ';"></span>' +
+                        p.name +
+                        '</button>';
             }
         });
-        html += `</div>`;
+        html += '</div>';
 
         container.innerHTML = html;
     },
