@@ -103,6 +103,12 @@
     border-color: var(--accent-blue);
 }
 
+.theme-preset-btn.active {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px var(--accent-blue);
+    background: var(--bg-color);
+}
+
 .theme-preset-dot {
     display: inline-block;
     min-width: 14px;
