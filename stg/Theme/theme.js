@@ -41,11 +41,17 @@ window.QA_CORE.CONSTANTS.THEME_PRESETS = {
 };
 
 window.QA_CORE.Theme = {
+    activePreset: null,
+    currentCategory: '라이트',
+
     init: () => {
         const savedTheme = JSON.parse(localStorage.getItem('skm_custom_palette'));
         if (savedTheme) {
             window.QA_CORE.Theme.apply(savedTheme.bg, savedTheme.panel, savedTheme.textMain, savedTheme.textSub, savedTheme.border, savedTheme.accent);
             window.QA_CORE.Theme.syncPickers(savedTheme.bg, savedTheme.panel, savedTheme.textMain, savedTheme.textSub, savedTheme.border, savedTheme.accent);
+            if (savedTheme.activePreset) window.QA_CORE.Theme.activePreset = savedTheme.activePreset;
+        } else {
+            window.QA_CORE.Theme.applyPreset('defaultLight');
         }
 
         if (typeof firebase !== 'undefined' && firebase.auth) {
@@ -56,6 +62,11 @@ window.QA_CORE.Theme = {
                         if (themeData) {
                             localStorage.setItem('skm_custom_palette', JSON.stringify(themeData));
                             window.QA_CORE.Theme.apply(themeData.bg, themeData.panel, themeData.textMain, themeData.textSub, themeData.border, themeData.accent);
+                            window.QA_CORE.Theme.syncPickers(themeData.bg, themeData.panel, themeData.textMain, themeData.textSub, themeData.border, themeData.accent);
+                            if (themeData.activePreset) {
+                                window.QA_CORE.Theme.activePreset = themeData.activePreset;
+                                window.QA_CORE.Theme.renderTabs(window.QA_CORE.Theme.currentCategory);
+                            }
                         }
                     });
                 }
@@ -86,11 +97,14 @@ window.QA_CORE.Theme = {
     applyPreset: (presetKey) => {
         const p = window.QA_CORE.CONSTANTS.THEME_PRESETS[presetKey];
         if (!p) return;
+        window.QA_CORE.Theme.activePreset = presetKey;
         window.QA_CORE.Theme.syncPickers(p.bg, p.panel, p.textMain, p.textSub, p.border, p.accent);
         window.QA_CORE.Theme.apply(p.bg, p.panel, p.textMain, p.textSub, p.border, p.accent);
+        window.QA_CORE.Theme.renderTabs(window.QA_CORE.Theme.currentCategory);
     },
 
     preview: () => {
+        window.QA_CORE.Theme.activePreset = null;
         const getVal = id => { const el = document.getElementById(id); return el ? el.value : null; };
         window.QA_CORE.Theme.apply(
             getVal('picker_bg'),
@@ -100,17 +114,31 @@ window.QA_CORE.Theme = {
             getVal('picker_border'),
             getVal('picker_accent')
         );
+        window.QA_CORE.Theme.renderTabs(window.QA_CORE.Theme.currentCategory);
     },
 
     save: () => {
         const getVal = id => { const el = document.getElementById(id); return el ? el.value : null; };
+        const bg = getVal('picker_bg');
+        const panel = getVal('picker_panel');
+        const textMain = getVal('picker_text_main');
+        const textSub = getVal('picker_text_sub');
+        const border = getVal('picker_border');
+        const accent = getVal('picker_accent');
+
+        if (bg === textMain || bg === textSub || panel === textMain) {
+            if (window.QA_CORE.UI) window.QA_CORE.UI.showToast('❌ 배경색과 글자색이 같으면 가독성이 떨어져 저장할 수 없습니다.', 'error');
+            return;
+        }
+
         const themeData = {
-            bg: getVal('picker_bg'),
-            panel: getVal('picker_panel'),
-            textMain: getVal('picker_text_main'),
-            textSub: getVal('picker_text_sub'),
-            border: getVal('picker_border'),
-            accent: getVal('picker_accent')
+            bg: bg,
+            panel: panel,
+            textMain: textMain,
+            textSub: textSub,
+            border: border,
+            accent: accent,
+            activePreset: window.QA_CORE.Theme.activePreset
         };
         
         localStorage.setItem('skm_custom_palette', JSON.stringify(themeData));
@@ -122,6 +150,9 @@ window.QA_CORE.Theme = {
                 firebase.database().ref('users/' + user.uid + '/theme').set(themeData)
                 .then(() => {
                     if (window.QA_CORE.UI) window.QA_CORE.UI.showToast('✅ 테마가 동기화되었습니다.', 'success');
+                })
+                .catch((err) => {
+                    if (window.QA_CORE.UI) window.QA_CORE.UI.showToast('❌ 서버 동기화에 실패했습니다.', 'error');
                 })
                 .finally(() => {
                     if (window.QA_CORE.UI) window.QA_CORE.UI.toggleLoading('btnSaveTheme', false);
@@ -142,6 +173,7 @@ window.QA_CORE.Theme = {
     },
 
     renderTabs: (activeCategory) => {
+        window.QA_CORE.Theme.currentCategory = activeCategory;
         const container = document.getElementById('preset_buttons_container');
         if (!container) return;
 
@@ -159,7 +191,8 @@ window.QA_CORE.Theme = {
         Object.keys(presets).forEach(key => {
             const p = presets[key];
             if (p.category === activeCategory) {
-                html += '<button type="button" class="theme-preset-btn" onclick="window.QA_CORE.Theme.applyPreset(\'' + key + '\')">' +
+                const activeBtnClass = key === window.QA_CORE.Theme.activePreset ? 'active' : '';
+                html += '<button type="button" class="theme-preset-btn ' + activeBtnClass + '" onclick="window.QA_CORE.Theme.applyPreset(\'' + key + '\')">' +
                         '<span class="theme-preset-dot" style="background-color: ' + p.accent + ';"></span>' +
                         p.name +
                         '</button>';
@@ -171,7 +204,7 @@ window.QA_CORE.Theme = {
     },
 
     openModal: () => {
-        window.QA_CORE.Theme.renderTabs('라이트');
+        window.QA_CORE.Theme.renderTabs(window.QA_CORE.Theme.currentCategory);
         if (window.QA_CORE.UI) window.QA_CORE.UI.initModal('theme-modal');
     },
 
