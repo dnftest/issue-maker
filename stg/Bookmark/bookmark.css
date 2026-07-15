@@ -217,7 +217,7 @@
 #bookmark-panel .bm-link-card:hover {
     border-color: var(--accent-blue);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
 }
 
 #bookmark-panel .bm-link-card:active {
@@ -310,6 +310,8 @@
 
 #bookmark-panel .bm-add-link-form {
     background: var(--panel-bg);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
     padding: 20px;
     border-radius: var(--radius-md);
     border: 2px solid var(--accent-blue);
@@ -317,7 +319,7 @@
     flex-direction: column;
     gap: 12px;
     margin-bottom: 20px;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
 }
 
 #bookmark-panel .bm-add-link-form.active {
