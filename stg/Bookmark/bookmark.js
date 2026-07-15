@@ -1,4 +1,7 @@
 window.QA_CORE = window.QA_CORE || {};
+window.QA_CORE.CONSTANTS = window.QA_CORE.CONSTANTS || {};
+window.QA_CORE.CONSTANTS.SETTINGS = window.QA_CORE.CONSTANTS.SETTINGS || {};
+window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID = window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID || "4LLzBg1Y9zOhcXAGhJK8OLYoUCQ2";
 
 window.QA_CORE.Bookmark = {
     State: {
@@ -37,6 +40,36 @@ window.QA_CORE.Bookmark = {
 
             if (nameInput) nameInput.addEventListener('keyup', handleEnter);
             if (urlInput) urlInput.addEventListener('keyup', handleEnter);
+
+            document.addEventListener('paste', (e) => {
+                if (!window.QA_CORE.Bookmark.State.isReady) return;
+                
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+                if (!pasteData) return;
+
+                let rawStr = pasteData.trim();
+                if (/^https?:\/\//i.test(rawStr) || /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(rawStr)) {
+                    if (!/^https?:\/\//i.test(rawStr)) rawStr = 'https://' + rawStr;
+                    
+                    window.QA_CORE.Bookmark.openAdd();
+                    
+                    const uEl = document.getElementById('bm_input_url');
+                    const nEl = document.getElementById('bm_input_name');
+                    
+                    if (uEl) uEl.value = rawStr;
+                    if (nEl) {
+                        nEl.value = '복사된 링크';
+                        setTimeout(() => {
+                            nEl.focus();
+                            nEl.select();
+                        }, 50);
+                    }
+                    if (window.QA_CORE.UI) window.QA_CORE.UI.showToast("🔗 클립보드 주소가 자동 입력되었습니다.", "info");
+                }
+            });
         } catch (e) {
             if (window.QA_CORE.ErrorHandler) window.QA_CORE.ErrorHandler.handle(e, 'Bookmark Init Events');
         }
@@ -72,7 +105,7 @@ window.QA_CORE.Bookmark = {
                         if (rootFolders.length > 0) state.currentFolderId = rootFolders[0].id;
                     }
                     
-                    window.QA_CORE.Bookmark.render();
+                    if (state.isReady) window.QA_CORE.Bookmark.render();
                 } catch (err) {
                     if (window.QA_CORE.ErrorHandler) window.QA_CORE.ErrorHandler.handle(err, 'Bookmark Data Parsing');
                 }
@@ -85,9 +118,25 @@ window.QA_CORE.Bookmark = {
     save: () => {
         try {
             if (typeof firebase !== 'undefined') {
-                firebase.database().ref('shared_bookmarks').set(window.QA_CORE.Bookmark.State.bookmarks).catch(err => {
+                const btn = document.getElementById('bm_save_btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = '저장 중...';
+                }
+                
+                firebase.database().ref('shared_bookmarks').set(window.QA_CORE.Bookmark.State.bookmarks)
+                .then(() => {
+                    if (window.QA_CORE.UI) window.QA_CORE.UI.showToast("✅ 북마크가 안전하게 저장되었습니다.", "success");
+                })
+                .catch(err => {
                     if (window.QA_CORE.ErrorHandler) window.QA_CORE.ErrorHandler.handle(err, 'Bookmark Firebase Save');
                     if (window.QA_CORE.UI) window.QA_CORE.UI.showToast("❌ 데이터 저장에 실패했습니다.", 'error');
+                })
+                .finally(() => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '저장하기';
+                    }
                 });
             }
         } catch (e) {
@@ -132,19 +181,19 @@ window.QA_CORE.Bookmark = {
         const state = window.QA_CORE.Bookmark.State;
         const rootAncestorId = window.QA_CORE.Bookmark.getRootAncestorId(state.currentFolderId);
         
-        div.className = `bm-folder ${folder.id === rootAncestorId ? 'active' : ''}`;
+        div.className = 'bm-folder' + (folder.id === rootAncestorId ? ' active' : '');
         div.draggable = true;
 
-        const adminUid = window.QA_CORE.CONSTANTS?.SETTINGS?.ADMIN_UID || "4LLzBg1Y9zOhcXAGhJK8OLYoUCQ2";
-        const deleteFolderBtn = state.currentUserUid === adminUid ? `<button class="bm-btn-icon del" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.deleteFolder('${folder.id}')">🗑️</button>` : '';
-        const escapeHTML = window.QA_CORE.Utils?.escapeHTML || (str => str);
+        const adminUid = window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID;
+        const deleteFolderBtn = state.currentUserUid === adminUid ? '<button class="bm-btn-icon del" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.deleteFolder(\'' + folder.id + '\')">🗑️</button>' : '';
+        const escapeHTML = window.QA_CORE.Utils?.escapeHTML || (str => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 
-        div.innerHTML = `<span class="bm-drag-handle">⋮⋮</span> 
-                         <span class="bm-folder-name">📁 ${escapeHTML(folder.name)}</span>
-                         <div class="bm-actions">
-                             <button class="bm-btn-icon" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.editFolder('${folder.id}')">✏️</button>
-                             ${deleteFolderBtn}
-                         </div>`;
+        div.innerHTML = '<span class="bm-drag-handle">⋮⋮</span>' +
+                        '<span class="bm-folder-name">📁 ' + escapeHTML(folder.name) + '</span>' +
+                        '<div class="bm-actions">' +
+                            '<button class="bm-btn-icon" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.editFolder(\'' + folder.id + '\')">✏️</button>' +
+                            deleteFolderBtn +
+                        '</div>';
         
         div.onclick = (e) => { 
             e.stopPropagation();
@@ -162,19 +211,19 @@ window.QA_CORE.Bookmark = {
         card.draggable = true;
         
         const state = window.QA_CORE.Bookmark.State;
-        const adminUid = window.QA_CORE.CONSTANTS?.SETTINGS?.ADMIN_UID || "4LLzBg1Y9zOhcXAGhJK8OLYoUCQ2";
-        const deleteFolderBtn = state.currentUserUid === adminUid ? `<button class="bm-btn-icon del" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.deleteFolder('${folder.id}')">🗑️</button>` : '';
-        const escapeHTML = window.QA_CORE.Utils?.escapeHTML || (str => str);
+        const adminUid = window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID;
+        const deleteFolderBtn = state.currentUserUid === adminUid ? '<button class="bm-btn-icon del" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.deleteFolder(\'' + folder.id + '\')">🗑️</button>' : '';
+        const escapeHTML = window.QA_CORE.Utils?.escapeHTML || (str => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 
-        card.innerHTML = `<span class="bm-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>
-                          <div class="bm-link-info">
-                              <b class="color-text-main">📁 ${escapeHTML(folder.name)}</b>
-                              <small>하위 폴더</small>
-                          </div>
-                          <div class="bm-actions" onclick="event.stopPropagation()">
-                             <button class="bm-btn-icon" onclick="window.QA_CORE.Bookmark.editFolder('${folder.id}')">✏️</button>
-                             ${deleteFolderBtn}
-                          </div>`;
+        card.innerHTML = '<span class="bm-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>' +
+                         '<div class="bm-link-info">' +
+                             '<b class="color-text-main">📁 ' + escapeHTML(folder.name) + '</b>' +
+                             '<small>하위 폴더</small>' +
+                         '</div>' +
+                         '<div class="bm-actions" onclick="event.stopPropagation()">' +
+                            '<button class="bm-btn-icon" onclick="window.QA_CORE.Bookmark.editFolder(\'' + folder.id + '\')">✏️</button>' +
+                            deleteFolderBtn +
+                         '</div>';
 
         card.onclick = (e) => {
             e.stopPropagation();
@@ -279,7 +328,7 @@ window.QA_CORE.Bookmark = {
 
                     window.QA_CORE.Bookmark.save();
                     window.QA_CORE.Bookmark.render();
-                    if (window.QA_CORE.UI) window.QA_CORE.UI.showToast(`📂 폴더가 이동되었습니다.`, 'success');
+                    if (window.QA_CORE.UI) window.QA_CORE.UI.showToast('📂 폴더가 이동되었습니다.', 'success');
                 }
             } else if (state.dragState.type === 'link') {
                 const sourceFolder = state.bookmarks.find(f => f.id === state.dragState.sourceFid);
@@ -292,7 +341,7 @@ window.QA_CORE.Bookmark = {
                         targetFolder.links.push(movingLink);
                         window.QA_CORE.Bookmark.save();
                         window.QA_CORE.Bookmark.render();
-                        if (window.QA_CORE.UI) window.QA_CORE.UI.showToast(`📍 링크가 이동되었습니다.`, 'success');
+                        if (window.QA_CORE.UI) window.QA_CORE.UI.showToast('📍 링크가 이동되었습니다.', 'success');
                     }
                 }
             }
@@ -418,7 +467,7 @@ window.QA_CORE.Bookmark = {
                     };
                     titleText.appendChild(upBtn);
                 }
-                titleText.appendChild(document.createTextNode(`📂 ${activeF.name}`));
+                titleText.appendChild(document.createTextNode('📂 ' + activeF.name));
 
                 const mainFragment = document.createDocumentFragment();
 
@@ -427,8 +476,8 @@ window.QA_CORE.Bookmark = {
                     mainFragment.appendChild(window.QA_CORE.Bookmark.buildMainFolderCard(sub));
                 });
 
-                const adminUid = window.QA_CORE.CONSTANTS?.SETTINGS?.ADMIN_UID || "4LLzBg1Y9zOhcXAGhJK8OLYoUCQ2";
-                const escapeHTML = window.QA_CORE.Utils?.escapeHTML || (str => str);
+                const adminUid = window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID;
+                const escapeHTML = window.QA_CORE.Utils?.escapeHTML || (str => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 
                 activeF.links.forEach((l) => {
                     const card = document.createElement('div');
@@ -436,14 +485,14 @@ window.QA_CORE.Bookmark = {
                     card.draggable = true;
                     card.onclick = () => window.open(l.url, '_blank');
                     
-                    const deleteLinkBtn = state.currentUserUid === adminUid ? `<button class="bm-btn-icon del" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.deleteLink('${activeF.id}', '${l.id}')">🗑️</button>` : '';
+                    const deleteLinkBtn = state.currentUserUid === adminUid ? '<button class="bm-btn-icon del" onclick="event.stopPropagation(); window.QA_CORE.Bookmark.deleteLink(\'' + activeF.id + '\', \'' + l.id + '\')">🗑️</button>' : '';
                     
-                    card.innerHTML = `<span class="bm-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>
-                                      <div class="bm-link-info"><b>${escapeHTML(l.name)}</b><small>${escapeHTML(l.url)}</small></div>
-                                      <div class="bm-actions" onclick="event.stopPropagation()">
-                                         <button class="bm-btn-icon" onclick="window.QA_CORE.Bookmark.openEdit('${l.id}')">✏️</button>
-                                         ${deleteLinkBtn}
-                                      </div>`;
+                    card.innerHTML = '<span class="bm-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>' +
+                                     '<div class="bm-link-info"><b>' + escapeHTML(l.name) + '</b><small>' + escapeHTML(l.url) + '</small></div>' +
+                                     '<div class="bm-actions" onclick="event.stopPropagation()">' +
+                                         '<button class="bm-btn-icon" onclick="window.QA_CORE.Bookmark.openEdit(\'' + l.id + '\')">✏️</button>' +
+                                         deleteLinkBtn +
+                                     '</div>';
                     
                     window.QA_CORE.Bookmark.setupLinkDragAndDrop(card, activeF, l);
                     
@@ -452,7 +501,7 @@ window.QA_CORE.Bookmark = {
                 
                 lList.appendChild(mainFragment);
             } else {
-                titleText.textContent = `📂 폴더를 선택하세요`;
+                titleText.textContent = '📂 폴더를 선택하세요';
             }
         } catch (e) {
             if (window.QA_CORE.ErrorHandler) window.QA_CORE.ErrorHandler.handle(e, 'Bookmark Rendering');
@@ -469,7 +518,7 @@ window.QA_CORE.Bookmark = {
             if (state.currentFolderId) {
                 const currentFolder = state.bookmarks.find(f => f.id === state.currentFolderId);
                 if (currentFolder) {
-                    if (confirm(`[${currentFolder.name}] 폴더 안에 하위 폴더로 만드시겠습니까?\n(취소 시 최상위 폴더로 생성)`)) {
+                    if (confirm('[' + currentFolder.name + '] 폴더 안에 하위 폴더로 만드시겠습니까?\n(취소 시 최상위 폴더로 생성)')) {
                         parentId = state.currentFolderId;
                     }
                 }
@@ -501,8 +550,11 @@ window.QA_CORE.Bookmark = {
     deleteFolder: (id) => {
         try {
             const state = window.QA_CORE.Bookmark.State;
-            const adminUid = window.QA_CORE.CONSTANTS?.SETTINGS?.ADMIN_UID || "4LLzBg1Y9zOhcXAGhJK8OLYoUCQ2";
-            if (state.currentUserUid !== adminUid) return;
+            const adminUid = window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID;
+            if (state.currentUserUid !== adminUid) {
+                if (window.QA_CORE.UI) window.QA_CORE.UI.showToast("🚫 폴더 삭제는 관리자만 가능합니다.", "error");
+                return;
+            }
             
             if (confirm('폴더를 삭제하시겠습니까?\n(폴더 내부의 모든 링크와 하위 폴더가 함께 삭제됩니다)')) { 
                 const idsToDelete = [id];
@@ -596,7 +648,10 @@ window.QA_CORE.Bookmark = {
             const rawN = nameEl.value.trim();
             let rawU = urlEl.value.trim();
             
-            if (!rawN || !rawU) return;
+            if (!rawN || !rawU) {
+                if (window.QA_CORE.UI) window.QA_CORE.UI.showToast("❌ 이름과 URL을 모두 입력해주세요.", 'error');
+                return;
+            }
             if (!/^https?:\/\//i.test(rawU)) rawU = 'https://' + rawU;
             
             const state = window.QA_CORE.Bookmark.State;
@@ -623,8 +678,11 @@ window.QA_CORE.Bookmark = {
     deleteLink: (fid, lid) => {
         try {
             const state = window.QA_CORE.Bookmark.State;
-            const adminUid = window.QA_CORE.CONSTANTS?.SETTINGS?.ADMIN_UID || "4LLzBg1Y9zOhcXAGhJK8OLYoUCQ2";
-            if (state.currentUserUid !== adminUid) return;
+            const adminUid = window.QA_CORE.CONSTANTS.SETTINGS.ADMIN_UID;
+            if (state.currentUserUid !== adminUid) {
+                if (window.QA_CORE.UI) window.QA_CORE.UI.showToast("🚫 링크 삭제는 관리자만 가능합니다.", "error");
+                return;
+            }
 
             if (confirm('이 링크를 삭제하시겠습니까?')) {
                 const f = state.bookmarks.find(x => x.id === fid);
@@ -646,5 +704,6 @@ document.addEventListener('componentsLoaded', () => {
         window.QA_CORE.Bookmark.initEvents();
         window.QA_CORE.Bookmark.init();
         window.QA_CORE.Bookmark.fetch();
+        window.QA_CORE.Bookmark.render();
     }
 });
